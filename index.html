@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teste lousa digital</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#0f1115;color:#f2f2ee;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.5vh;text-align:center;padding:4vh 4vw}
+  .tag{font-size:clamp(14px,2.2vw,28px);color:#9aa0a6}
+  .clock{font-size:clamp(64px,16vw,220px);font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+  .date{font-size:clamp(18px,3vw,40px);color:#c9cdd2}
+  .ok{font-size:clamp(18px,3vw,40px);color:#8fd18b}
+  .info{font-size:clamp(12px,1.6vw,20px);color:#7c828a}
+  #painel-celular{display:none;flex-direction:column;align-items:center;gap:14px;margin-top:2vh;max-width:520px}
+  button{font:inherit;font-size:20px;padding:16px 28px;border-radius:12px;border:0;background:#2f6fde;color:#fff;cursor:pointer;min-height:56px}
+  button:disabled{background:#3a3f47;color:#9aa0a6}
+  #status{font-size:16px;color:#c9cdd2;min-height:1.5em}
+  .dica{font-size:14px;color:#9aa0a6;line-height:1.5}
+</style>
+</head>
+<body>
+  <div class="tag">Teste da lousa digital</div>
+  <div class="clock" id="relogio">--:--:--</div>
+  <div class="date" id="data"></div>
+  <div class="ok">Se este relógio está andando na TV, a transmissão funcionou.</div>
+  <div class="info" id="carregado"></div>
+
+  <div id="painel-celular">
+    <button id="btn" disabled>Procurando Chromecast…</button>
+    <div id="status"></div>
+    <div class="dica">O celular precisa estar no mesmo Wi-Fi do Chromecast e usar o Chrome (Android ou computador).
+      Depois que a TV mostrar o relógio, você pode fechar o Chrome ou sair do Wi-Fi: a TV deve continuar sozinha.</div>
+  </div>
+
+<script>
+{
+  const naTV = new URLSearchParams(location.search).has('tv') || window.self !== window.top;
+  const pad = n => String(n).padStart(2,'0');
+  const dias = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+  const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  const tick = () => {
+    const d = new Date();
+    document.getElementById('relogio').textContent = pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());
+    document.getElementById('data').textContent = dias[d.getDay()]+', '+d.getDate()+' de '+meses[d.getMonth()]+' de '+d.getFullYear();
+  };
+  tick(); setInterval(tick, 1000);
+  const c = new Date();
+  document.getElementById('carregado').textContent = 'Página aberta às '+pad(c.getHours())+':'+pad(c.getMinutes())+(naTV ? ' · exibindo na TV' : ' · aberta no celular/PC');
+
+  if (!naTV) {
+    document.getElementById('painel-celular').style.display = 'flex';
+    const btn = document.getElementById('btn');
+    const status = document.getElementById('status');
+    const APP_DASHCAST = '84912283';
+    const NS = 'urn:x-cast:es.offd.dashcast';
+    const urlTV = location.origin + location.pathname + '?tv=1';
+
+    const enviar = session => {
+      session.sendMessage(NS, { url: urlTV, force: false, reload: false, reload_time: 0 })
+        .then(() => { status.textContent = 'Link enviado. Confira a TV.'; })
+        .catch(e => { status.textContent = 'Conectou, mas falhou ao enviar o link (' + (e && e.code || e) + ').'; });
+    };
+
+    window.__onGCastApiAvailable = ok => {
+      if (!ok) { btn.textContent = 'Este navegador não transmite'; status.textContent = 'Use o Chrome no Android ou no computador. No iPhone, use o app URLCast.'; return; }
+      const ctx = cast.framework.CastContext.getInstance();
+      ctx.setOptions({ receiverApplicationId: APP_DASHCAST, autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED });
+      btn.disabled = false;
+      btn.textContent = 'Transmitir para a TV';
+      btn.addEventListener('click', () => {
+        status.textContent = 'Escolha o Chromecast na lista…';
+        ctx.requestSession().then(() => {
+          const s = ctx.getCurrentSession();
+          if (s) { status.textContent = 'Conectado. Enviando link…'; enviar(s); }
+        }).catch(e => {
+          status.textContent = e === 'cancel' ? 'Cancelado.' : 'Não conectou (' + e + '). Se o Chromecast apareceu na lista, o app DashCast pode estar fora do ar.';
+        });
+      });
+    };
+    const sc = document.createElement('script');
+    sc.src = 'https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1';
+    sc.onerror = () => { btn.textContent = 'Sem acesso ao Google Cast'; status.textContent = 'Não carregou a biblioteca de transmissão. Verifique a internet.'; };
+    document.head.appendChild(sc);
+    setTimeout(() => { if (btn.disabled) { btn.textContent = 'Transmissão indisponível'; status.textContent = 'Use o Chrome no Android ou no computador. No iPhone, use o app URLCast.'; } }, 8000);
+  }
+}
+</script>
+</body>
