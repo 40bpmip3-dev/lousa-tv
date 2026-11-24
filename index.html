@@ -55,16 +55,24 @@
     const btn = document.getElementById('btn');
     const status = document.getElementById('status');
     const APP_DASHCAST = '84912283';
-    const NS = 'urn:x-cast:es.offd.dashcast';
+    const NAMESPACES = ['urn:x-cast:com.madmod.dashcast', 'urn:x-cast:es.offd.dashcast'];
     const urlTV = location.origin + location.pathname + '?tv=1';
 
     const reenviar = document.getElementById('reenviar');
     let tentativas = 0;
     const enviar = session => {
       tentativas++;
-      session.sendMessage(NS, { url: urlTV, force: false, reload: false, reload_time: 0 })
-        .then(() => { status.textContent = 'Link enviado (' + tentativas + 'x). Confira a TV.'; })
-        .catch(e => { status.textContent = 'Falhou ao enviar o link (' + (e && e.code || e) + '). Toque em Reenviar.'; });
+      const msg = { url: urlTV, force: false, reload: false, reload_time: 0 };
+      const ok = [], erros = [];
+      Promise.all(NAMESPACES.map((ns, i) =>
+        session.sendMessage(ns, msg)
+          .then(() => ok.push('canal ' + (i + 1)))
+          .catch(e => erros.push('canal ' + (i + 1) + ': ' + (e && e.code || e)))
+      )).then(() => {
+        status.textContent = ok.length
+          ? 'Link enviado (' + tentativas + 'x, ' + ok.join(', ') + '). Confira a TV.'
+          : 'Falhou ao enviar o link (' + erros.join('; ') + '). Toque em Reenviar.';
+      });
     };
     const enviarVariasVezes = () => {
       const s = cast.framework.CastContext.getInstance().getCurrentSession();
