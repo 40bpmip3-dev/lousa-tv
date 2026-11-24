@@ -29,6 +29,7 @@
 
   <div id="painel-celular">
     <button id="btn" disabled>Procurando Chromecast…</button>
+    <button id="reenviar" style="display:none;background:#3a3f47">Reenviar link para a TV</button>
     <div id="status"></div>
     <div class="dica">O celular precisa estar no mesmo Wi-Fi do Chromecast e usar o Chrome (Android ou computador).
       Depois que a TV mostrar o relógio, você pode fechar o Chrome ou sair do Wi-Fi: a TV deve continuar sozinha.</div>
@@ -57,11 +58,21 @@
     const NS = 'urn:x-cast:es.offd.dashcast';
     const urlTV = location.origin + location.pathname + '?tv=1';
 
+    const reenviar = document.getElementById('reenviar');
+    let tentativas = 0;
     const enviar = session => {
+      tentativas++;
       session.sendMessage(NS, { url: urlTV, force: false, reload: false, reload_time: 0 })
-        .then(() => { status.textContent = 'Link enviado. Confira a TV.'; })
-        .catch(e => { status.textContent = 'Conectou, mas falhou ao enviar o link (' + (e && e.code || e) + ').'; });
+        .then(() => { status.textContent = 'Link enviado (' + tentativas + 'x). Confira a TV.'; })
+        .catch(e => { status.textContent = 'Falhou ao enviar o link (' + (e && e.code || e) + '). Toque em Reenviar.'; });
     };
+    const enviarVariasVezes = () => {
+      const s = cast.framework.CastContext.getInstance().getCurrentSession();
+      if (!s) { status.textContent = 'Sem conexão com a TV. Toque em Transmitir de novo.'; return; }
+      reenviar.style.display = 'inline-block';
+      [500, 2500, 5000, 9000].forEach(ms => setTimeout(() => enviar(s), ms));
+    };
+    reenviar.addEventListener('click', enviarVariasVezes);
 
     window.__onGCastApiAvailable = ok => {
       if (!ok) { btn.textContent = 'Este navegador não transmite'; status.textContent = 'Use o Chrome no Android ou no computador. No iPhone, use o app URLCast.'; return; }
@@ -72,8 +83,8 @@
       btn.addEventListener('click', () => {
         status.textContent = 'Escolha o Chromecast na lista…';
         ctx.requestSession().then(() => {
-          const s = ctx.getCurrentSession();
-          if (s) { status.textContent = 'Conectado. Enviando link…'; enviar(s); }
+          status.textContent = 'Conectado. Enviando link…';
+          enviarVariasVezes();
         }).catch(e => {
           status.textContent = e === 'cancel' ? 'Cancelado.' : 'Não conectou (' + e + '). Se o Chromecast apareceu na lista, o app DashCast pode estar fora do ar.';
         });
