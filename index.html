@@ -3,107 +3,271 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Teste lousa digital</title>
+<title>Lousa digital P/3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
 <style>
-  *{box-sizing:border-box}
-  html,body{margin:0;height:100%;background:#0f1115;color:#f2f2ee;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-  body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.5vh;text-align:center;padding:4vh 4vw}
-  .tag{font-size:clamp(14px,2.2vw,28px);color:#9aa0a6}
-  .clock{font-size:clamp(64px,16vw,220px);font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
-  .date{font-size:clamp(18px,3vw,40px);color:#c9cdd2}
-  .ok{font-size:clamp(18px,3vw,40px);color:#8fd18b}
-  .info{font-size:clamp(12px,1.6vw,20px);color:#7c828a}
-  #painel-celular{display:none;flex-direction:column;align-items:center;gap:14px;margin-top:2vh;max-width:520px}
-  button{font:inherit;font-size:20px;padding:16px 28px;border-radius:12px;border:0;background:#2f6fde;color:#fff;cursor:pointer;min-height:56px}
-  button:disabled{background:#3a3f47;color:#9aa0a6}
-  #status{font-size:16px;color:#c9cdd2;min-height:1.5em}
-  .dica{font-size:14px;color:#9aa0a6;line-height:1.5}
+  *{box-sizing:border-box;min-width:0}
+  html,body{margin:0;height:100%;overflow:hidden;background:#0e1014;color:#f1f0ec;font-family:Barlow,system-ui,"Segoe UI",Roboto,sans-serif}
+  .tela{height:100vh;display:grid;grid-template-rows:auto 1fr auto;padding:2.2vh 2.6vw 0;gap:2vh}
+  header{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:2vw}
+  header img{height:17vh;width:auto;display:block}
+  .centro{text-align:center}
+  .secao{font-family:"Barlow Condensed",Barlow,sans-serif;font-weight:700;font-size:6.4vh;line-height:1.05;letter-spacing:.01em}
+  .linha-ouro{height:.5vh;width:22vw;margin:1.2vh auto;background:#c9a23a;border-radius:1vh}
+  .relogio{font-size:3.4vh;color:#c9cdd2;font-variant-numeric:tabular-nums}
+  .relogio b{color:#f1f0ec;font-weight:600}
+  main{position:relative;overflow:hidden}
+  .itens{display:flex;flex-direction:column;gap:1.8vh;height:100%}
+  .item{background:#181b21;border-left:.8vh solid #c9a23a;border-radius:0 1.2vh 1.2vh 0;padding:2vh 2.2vw;font-size:5vh;line-height:1.28;font-weight:500;white-space:pre-line;overflow-wrap:anywhere}
+  .item.destaque{border-left-color:#d22630;background:#24161a}
+  .vazio{color:#8b9098;font-size:4vh;padding:4vh 0;text-align:center}
+  #medida{position:absolute;inset:0;visibility:hidden;pointer-events:none}
+  footer{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2vw;border-top:1px solid #262a31;padding:1.4vh 0 1.6vh;min-height:7vh}
+  .aviso{overflow:hidden;white-space:nowrap;font-size:3.2vh;color:#e9e6dc}
+  .aviso span{display:inline-block;padding-left:100%;animation:passa var(--dur,30s) linear infinite}
+  .aviso .rotulo{color:#d22630;font-weight:600;margin-right:1.2vw;animation:none;padding:0}
+  @keyframes passa{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+  .meta{font-size:2.2vh;color:#7d838c;text-align:right;font-variant-numeric:tabular-nums}
+  .progresso{position:fixed;left:0;bottom:0;height:.6vh;background:#c9a23a;width:0}
+  .pagina{font-size:2.4vh;color:#8b9098;margin-top:.4vh}
+  #transmitir{display:none;position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:5;background:#1c2028;border:1px solid #333944;border-radius:14px;padding:12px;gap:10px;flex-direction:column;align-items:center;width:min(92vw,460px);box-shadow:0 8px 30px #0008}
+  #transmitir button{font:600 18px Barlow,system-ui,sans-serif;padding:14px 22px;border-radius:10px;border:0;background:#2f6fde;color:#fff;min-height:52px;width:100%;cursor:pointer}
+  #transmitir button.sec{background:#3a3f47}
+  #transmitir button:disabled{background:#3a3f47;color:#9aa0a6}
+  #status{font-size:14px;color:#c9cdd2;text-align:center;min-height:1.3em}
+  @media (orientation:portrait){
+    header img{height:9vh}.secao{font-size:4vh}.item{font-size:2.6vh}.relogio{font-size:2.2vh}.aviso{font-size:2.2vh}
+  }
+  @media (prefers-reduced-motion:reduce){.aviso span{animation:none;padding-left:0}}
 </style>
 </head>
 <body>
-  <div class="tag">Teste da lousa digital</div>
-  <div class="clock" id="relogio">--:--:--</div>
-  <div class="date" id="data"></div>
-  <div class="ok">Se este relógio está andando na TV, a transmissão funcionou.</div>
-  <div class="info" id="carregado"></div>
+<div class="tela">
+  <header>
+    <img src="brasao-40bpm.png" alt="Brasão do 40º BPM/I">
+    <div class="centro">
+      <div class="secao" id="secao">Carregando…</div>
+      <div class="linha-ouro"></div>
+      <div class="relogio"><b id="hora">--:--</b> · <span id="data"></span></div>
+      <div class="pagina" id="pagina"></div>
+    </div>
+    <img src="brasao-p3.png" alt="Brasão da P/3">
+  </header>
+  <main>
+    <div class="itens" id="itens"></div>
+    <div class="itens" id="medida" aria-hidden="true"></div>
+  </main>
+  <footer>
+    <div class="aviso" id="aviso"></div>
+    <div class="meta" id="meta"></div>
+  </footer>
+</div>
+<div class="progresso" id="progresso"></div>
 
-  <div id="painel-celular">
-    <button id="btn" disabled>Procurando Chromecast…</button>
-    <button id="reenviar" style="display:none;background:#3a3f47">Reenviar link para a TV</button>
-    <div id="status"></div>
-    <div class="dica">O celular precisa estar no mesmo Wi-Fi do Chromecast e usar o Chrome (Android ou computador).
-      Depois que a TV mostrar o relógio, você pode fechar o Chrome ou sair do Wi-Fi: a TV deve continuar sozinha.</div>
-  </div>
+<div id="transmitir">
+  <button id="btn" disabled>Procurando Chromecast…</button>
+  <button id="reenviar" class="sec" style="display:none">Reenviar link para a TV</button>
+  <div id="status"></div>
+</div>
 
 <script>
 {
-  const naTV = new URLSearchParams(location.search).has('tv') || window.self !== window.top;
-  const pad = n => String(n).padStart(2,'0');
-  const dias = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
-  const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-  const tick = () => {
-    const d = new Date();
-    document.getElementById('relogio').textContent = pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());
-    document.getElementById('data').textContent = dias[d.getDay()]+', '+d.getDate()+' de '+meses[d.getMonth()]+' de '+d.getFullYear();
-  };
-  tick(); setInterval(tick, 1000);
-  const c = new Date();
-  document.getElementById('carregado').textContent = 'Página aberta às '+pad(c.getHours())+':'+pad(c.getMinutes())+(naTV ? ' · exibindo na TV' : ' · aberta no celular/PC');
+  /* ===== CONFIGURAÇÃO ===== */
+  // Cole aqui o link CSV da planilha publicada (Arquivo > Compartilhar > Publicar na Web > CSV).
+  // Enquanto estiver vazio, o painel mostra os dados de exemplo abaixo.
+  const PLANILHA_CSV = '';
+  const SEGUNDOS_POR_TELA = 20;
+  const MINUTOS_ATUALIZACAO = 5;
+  const SECOES_FIXAS = ['Seção Operacional', 'Gabinete de Treinamento'];
+  const EXEMPLO = [
+    { secao: 'Seção Operacional', texto: 'Operação Grande Envergadura II de 23 a 27NOV — enviar relatório dia 08DEZ26', destaque: false },
+    { secao: 'Gabinete de Treinamento', texto: 'ENEM — enviar relatório, prazo 18DEZ26', destaque: false },
+    { secao: 'Aviso', texto: 'Exemplo de aviso: este texto vem da planilha e passa aqui no rodapé.', destaque: false }
+  ];
+  /* ======================== */
 
+  const naTV = new URLSearchParams(location.search).has('tv') || window.self !== window.top;
+  const $ = id => document.getElementById(id);
+  const pad = n => String(n).padStart(2, '0');
+  const dias = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+  const meses = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
+
+  const relogio = () => {
+    const d = new Date();
+    $('hora').textContent = pad(d.getHours()) + ':' + pad(d.getMinutes());
+    $('data').textContent = dias[d.getDay()] + ', ' + d.getDate() + ' ' + meses[d.getMonth()] + ' ' + d.getFullYear();
+  };
+  relogio(); setInterval(relogio, 1000);
+
+  const lerCSV = txt => {
+    const linhas = []; let linha = [], campo = '', aspas = false;
+    for (let i = 0; i < txt.length; i++) {
+      const c = txt[i];
+      if (aspas) {
+        if (c === '"') { if (txt[i + 1] === '"') { campo += '"'; i++; } else aspas = false; }
+        else campo += c;
+      } else if (c === '"') aspas = true;
+      else if (c === ',') { linha.push(campo); campo = ''; }
+      else if (c === '\n' || c === '\r') {
+        if (c === '\r' && txt[i + 1] === '\n') i++;
+        linha.push(campo); linhas.push(linha); linha = []; campo = '';
+      } else campo += c;
+    }
+    if (campo !== '' || linha.length) { linha.push(campo); linhas.push(linha); }
+    return linhas;
+  };
+
+  const nomeSecao = s => {
+    const n = norm(s);
+    if (n.includes('operac')) return 'Seção Operacional';
+    if (n.includes('treinamento') || n.includes('gabinete')) return 'Gabinete de Treinamento';
+    if (n.startsWith('aviso')) return 'Aviso';
+    return String(s || '').trim();
+  };
+
+  const converter = linhas => {
+    if (!linhas.length) return [];
+    const cab = linhas[0].map(norm);
+    const iS = cab.findIndex(h => h.startsWith('secao'));
+    const iT = cab.findIndex(h => h.startsWith('texto'));
+    const iD = cab.findIndex(h => h.startsWith('destaque'));
+    if (iS < 0 || iT < 0) throw new Error('A planilha precisa das colunas "Seção" e "Texto" na primeira linha.');
+    return linhas.slice(1)
+      .map(l => ({ secao: nomeSecao(l[iS]), texto: String(l[iT] || '').trim(), destaque: iD >= 0 && ['sim','s','x'].includes(norm(l[iD])) }))
+      .filter(r => r.secao && r.texto);
+  };
+
+  let dados = PLANILHA_CSV ? [] : EXEMPLO;
+  let atualizadoEm = PLANILHA_CSV ? null : new Date();
+  let erro = '';
+
+  const atualizarMeta = () => {
+    const h = atualizadoEm ? pad(atualizadoEm.getHours()) + ':' + pad(atualizadoEm.getMinutes()) : '--:--';
+    $('meta').textContent = !PLANILHA_CSV ? 'Dados de exemplo' : erro ? 'Sem conexão · dados de ' + h : 'Atualizado às ' + h;
+  };
+
+  const buscar = () => {
+    if (!PLANILHA_CSV) { atualizarMeta(); return Promise.resolve(); }
+    const url = PLANILHA_CSV + (PLANILHA_CSV.includes('?') ? '&' : '?') + 't=' + Date.now();
+    return fetch(url, { cache: 'no-store' })
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+      .then(t => { dados = converter(lerCSV(t)); atualizadoEm = new Date(); erro = ''; montarAviso(); })
+      .catch(e => { erro = e.message; })
+      .then(atualizarMeta);
+  };
+
+  const montarAviso = () => {
+    const av = dados.filter(r => r.secao === 'Aviso').map(r => r.texto);
+    const box = $('aviso');
+    box.textContent = '';
+    if (!av.length) return;
+    const rot = document.createElement('span'); rot.className = 'rotulo'; rot.textContent = 'AVISO';
+    const txt = document.createElement('span'); txt.textContent = av.join('     •     ');
+    txt.style.setProperty('--dur', Math.max(18, av.join(' ').length * 0.28) + 's');
+    const wrap = document.createElement('div'); wrap.style.display = 'flex'; wrap.style.overflow = 'hidden';
+    const trilho = document.createElement('div'); trilho.style.overflow = 'hidden'; trilho.style.flex = '1'; trilho.appendChild(txt);
+    wrap.appendChild(rot); wrap.appendChild(trilho); box.appendChild(wrap);
+  };
+
+  const criarItem = r => {
+    const el = document.createElement('div');
+    el.className = 'item' + (r.destaque ? ' destaque' : '');
+    el.textContent = r.texto;
+    return el;
+  };
+
+  const paginar = itens => {
+    const caixa = $('medida'); caixa.textContent = '';
+    const paginas = []; let atual = [];
+    itens.forEach(r => {
+      const el = criarItem(r); caixa.appendChild(el);
+      if (caixa.scrollHeight > caixa.clientHeight + 2 && atual.length) {
+        paginas.push(atual); atual = []; caixa.textContent = ''; caixa.appendChild(el);
+      }
+      atual.push(r);
+    });
+    paginas.push(atual);
+    caixa.textContent = '';
+    return paginas;
+  };
+
+  const montarTelas = () => {
+    const nomes = SECOES_FIXAS.slice();
+    dados.forEach(r => { if (r.secao !== 'Aviso' && !nomes.includes(r.secao)) nomes.push(r.secao); });
+    const telas = [];
+    nomes.forEach(nome => {
+      const itens = dados.filter(r => r.secao === nome);
+      const pags = itens.length ? paginar(itens) : [[]];
+      pags.forEach((p, i) => telas.push({ nome, itens: p, pag: i + 1, total: pags.length }));
+    });
+    return telas;
+  };
+
+  let telas = [], idx = -1;
+  const mostrar = () => {
+    if (idx === -1 || idx >= telas.length - 1) { telas = montarTelas(); idx = 0; } else idx++;
+    const t = telas[idx];
+    $('secao').textContent = t.nome;
+    $('pagina').textContent = t.total > 1 ? 'Página ' + t.pag + ' de ' + t.total : '';
+    const box = $('itens'); box.textContent = '';
+    if (!t.itens.length) {
+      const v = document.createElement('div'); v.className = 'vazio'; v.textContent = 'Nenhum item no momento.'; box.appendChild(v);
+    } else t.itens.forEach(r => box.appendChild(criarItem(r)));
+    const p = $('progresso');
+    p.style.transition = 'none'; p.style.width = '0';
+    void p.offsetWidth;
+    p.style.transition = 'width ' + SEGUNDOS_POR_TELA + 's linear'; p.style.width = '100%';
+  };
+
+  buscar().then(() => { montarAviso(); mostrar(); setInterval(mostrar, SEGUNDOS_POR_TELA * 1000); });
+  setInterval(buscar, MINUTOS_ATUALIZACAO * 60 * 1000);
+  window.addEventListener('resize', () => { idx = -1; mostrar(); });
+  if (naTV) setTimeout(() => location.reload(), 6 * 60 * 60 * 1000);
+
+  /* ===== Botão de transmissão (aparece só no celular/PC) ===== */
   if (!naTV) {
-    document.getElementById('painel-celular').style.display = 'flex';
-    const btn = document.getElementById('btn');
-    const status = document.getElementById('status');
+    $('transmitir').style.display = 'flex';
+    const btn = $('btn'), status = $('status'), reenviar = $('reenviar');
     const APP_DASHCAST = '84912283';
     const NAMESPACES = ['urn:x-cast:com.madmod.dashcast', 'urn:x-cast:es.offd.dashcast'];
     const urlTV = location.origin + location.pathname + '?tv=1';
-
-    const reenviar = document.getElementById('reenviar');
     let tentativas = 0;
     const enviar = session => {
       tentativas++;
       const msg = { url: urlTV, force: false, reload: false, reload_time: 0 };
       const ok = [], erros = [];
-      Promise.all(NAMESPACES.map((ns, i) =>
-        session.sendMessage(ns, msg)
-          .then(() => ok.push('canal ' + (i + 1)))
-          .catch(e => erros.push('canal ' + (i + 1) + ': ' + (e && e.code || e)))
-      )).then(() => {
-        status.textContent = ok.length
-          ? 'Link enviado (' + tentativas + 'x, ' + ok.join(', ') + '). Confira a TV.'
-          : 'Falhou ao enviar o link (' + erros.join('; ') + '). Toque em Reenviar.';
-      });
+      Promise.all(NAMESPACES.map((ns, i) => session.sendMessage(ns, msg)
+        .then(() => ok.push(i + 1)).catch(e => erros.push((i + 1) + ': ' + (e && e.code || e)))))
+        .then(() => { status.textContent = ok.length ? 'Link enviado. Confira a TV.' : 'Falhou ao enviar (' + erros.join('; ') + '). Toque em Reenviar.'; });
     };
     const enviarVariasVezes = () => {
       const s = cast.framework.CastContext.getInstance().getCurrentSession();
       if (!s) { status.textContent = 'Sem conexão com a TV. Toque em Transmitir de novo.'; return; }
-      reenviar.style.display = 'inline-block';
+      reenviar.style.display = 'block';
       [500, 2500, 5000, 9000].forEach(ms => setTimeout(() => enviar(s), ms));
     };
     reenviar.addEventListener('click', enviarVariasVezes);
-
-    window.__onGCastApiAvailable = ok => {
-      if (!ok) { btn.textContent = 'Este navegador não transmite'; status.textContent = 'Use o Chrome no Android ou no computador. No iPhone, use o app URLCast.'; return; }
+    window.__onGCastApiAvailable = disponivel => {
+      if (!disponivel) { btn.textContent = 'Este navegador não transmite'; status.textContent = 'Use o Chrome no Android ou no computador. No iPhone, use o URLCast.'; return; }
       const ctx = cast.framework.CastContext.getInstance();
       ctx.setOptions({ receiverApplicationId: APP_DASHCAST, autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED });
-      btn.disabled = false;
-      btn.textContent = 'Transmitir para a TV';
+      btn.disabled = false; btn.textContent = 'Transmitir para a TV';
       btn.addEventListener('click', () => {
         status.textContent = 'Escolha o Chromecast na lista…';
-        ctx.requestSession().then(() => {
-          status.textContent = 'Conectado. Enviando link…';
-          enviarVariasVezes();
-        }).catch(e => {
-          status.textContent = e === 'cancel' ? 'Cancelado.' : 'Não conectou (' + e + '). Se o Chromecast apareceu na lista, o app DashCast pode estar fora do ar.';
-        });
+        ctx.requestSession().then(() => { status.textContent = 'Conectado. Enviando link…'; enviarVariasVezes(); })
+          .catch(e => { status.textContent = e === 'cancel' ? 'Cancelado.' : 'Não conectou (' + e + ').'; });
       });
     };
     const sc = document.createElement('script');
     sc.src = 'https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1';
-    sc.onerror = () => { btn.textContent = 'Sem acesso ao Google Cast'; status.textContent = 'Não carregou a biblioteca de transmissão. Verifique a internet.'; };
+    sc.onerror = () => { btn.textContent = 'Sem acesso ao Google Cast'; };
     document.head.appendChild(sc);
-    setTimeout(() => { if (btn.disabled) { btn.textContent = 'Transmissão indisponível'; status.textContent = 'Use o Chrome no Android ou no computador. No iPhone, use o app URLCast.'; } }, 8000);
+    setTimeout(() => { if (btn.disabled) { btn.textContent = 'Transmissão indisponível'; status.textContent = 'Use o Chrome no Android ou no computador. No iPhone, use o URLCast.'; } }, 8000);
   }
 }
 </script>
 </body>
+</html>
